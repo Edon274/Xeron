@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+
+model Contract {
+  id                String         @id @default(cuid())
+  demoUserId        String         @default("demo-user")
+  title             String
+  provider          String
+  category          String        @default("OTHER")
+  startDate         DateTime
+  endDate           DateTime?
+  terminationDate   DateTime?
+  renewalDate       DateTime?
+  frequency         String        @default("MONTHLY")
+  amount            Float
+  status            String         @default("ACTIVE")
+  notes             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  subscriptions     Subscription[]
+  documents         Document[]
+}
+
+model Subscription {
+  id              String     @id @default(cuid())
+  demoUserId      String     @default("demo-user")
+  name            String
+  provider        String
+  category        String     @default("SUBSCRIPTION")
+  startDate       DateTime
+  renewalDate     DateTime?
+  frequency       String     @default("MONTHLY")
+  amount          Float
+  isActive        Boolean    @default(true)
+  notes           String?
+  contract        Contract?  @relation(fields: [contractId], references: [id])
+  contractId      String?
+  documents       Document[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  demoUserId    String        @default("demo-user")
+  title         String
+  provider      String
+  amount        Float
+  dueDate       DateTime
+  status        String        @default("OPEN")
+  category      String        @default("OTHER")
+  notes         String?
+  filePath      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  documents     Document[]
+}
+
+model Document {
+  id             String       @id @default(cuid())
+  demoUserId     String       @default("demo-user")
+  title          String
+  type           String       @default("UNKNOWN")
+  fileName       String
+  filePath       String
+  extractedText  String?
+  notes          String?
+  extractedAmount Float?
+  extractedDate  DateTime?
+  aiSummary      String?
+  cancellationHint String?
+  category       String       @default("OTHER")
+  linkedContract Contract?    @relation(fields: [linkedContractId], references: [id])
+  linkedContractId String?
+  linkedSubscription Subscription? @relation(fields: [linkedSubscriptionId], references: [id])
+  linkedSubscriptionId String?
+  linkedInvoice   Invoice?    @relation(fields: [linkedInvoiceId], references: [id])
+  linkedInvoiceId String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
